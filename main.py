@@ -43,8 +43,7 @@ class game():
     def update(self):
         self.screen_size = (self.window_surface.get_width(), self.window_surface.get_height())
         game.window_surface = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
-        # self.bg = pygame.Surface(self.screen_size)
-        # self.bg.fill(pygame.Color(self.bg_color))
+        pygame.draw.rect(self.window_surface, (22,30,30), (0,0,self.screen_size[0], self.screen_size[1]))
         game.manager = pygame_gui.UIManager(self.screen_size)
         for i in self.btn:
             i.kill()
@@ -65,10 +64,10 @@ if __name__ == "__main__":
                 if event.ui_element == G.button_play:
                     print('Hello World!')
 
-            # if event.type == pygame.VIDEORESIZE:
-            #     surface = pygame.display.set_mode((event.w, event.h),pygame.RESIZABLE)
-            #     game.screen_size = (event.w, event.h)
-            #     G.update()
+            if event.type == pygame.VIDEORESIZE:
+                surface = pygame.display.set_mode((event.w, event.h),pygame.RESIZABLE)
+                game.screen_size = (event.w, event.h)
+                G.update()
             game.manager.process_events(event)
 
         game.manager.update(time_delta)
