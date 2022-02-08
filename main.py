@@ -1,4 +1,5 @@
 from re import S
+from shutil import which
 from turtle import screensize
 from matplotlib.pyplot import title
 import pygame
@@ -18,10 +19,13 @@ class game():
         pygame.init()
         pygame.display.set_caption('Not Wordle')
         game.manager = pygame_gui.UIManager(self.screen_size)
-        game.texts = []
+        game.texts = {}
         game.font = pygame.font.SysFont("res/font/AnonymousPro-Bold.ttf", 24)
         game.tick = 0
         game.title_letter = 0
+        game.started = False
+        game.word = ""
+        game.guess = []
 
     def menu_btn(self):
         #self.screen_size = (self.window_surface.get_width(), self.window_surface.get_height())
@@ -33,7 +37,7 @@ class game():
         coord_y = center_y - btn_height/2
         y_ptage = coord_y/self.screen_size[1]
         self.button_play = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((coord_x, coord_y - 200*y_ptage), (btn_width, btn_height)),text='JOUER',manager=self.manager)
-        self.button_words = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((coord_x, coord_y), (btn_width, btn_height)),text='MOTS',manager=self.manager)
+        self.button_words = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((coord_x, coord_y), (btn_width, btn_height)),text='OPTIONS',manager=self.manager)
         self.button_quit = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((coord_x, coord_y + 200*y_ptage), (btn_width, btn_height)),text='NE PLUS JOUER',manager=self.manager)
         self.btn = [self.button_play, self.button_quit, self.button_words]
     
@@ -51,8 +55,7 @@ class game():
 
     def text(self, pos, text, id, color=(255,255,255)):
         tx = self.font.render(text, True, color)
-        game.window_surface.blit(tx, pos)
-        game.texts.append({'id':id, 'data':tx})
+        game.texts[str(id)]=(tx, pos)
 
     def update(self):
         self.screen_size = (self.window_surface.get_width(), self.window_surface.get_height())
@@ -62,13 +65,37 @@ class game():
         for i in self.btn:
             i.kill()
         self.menu_btn()
+    
+    def start(self):
+        self.button_play.kill()
+        self.button_quit.kill()
+        self.button_words.kill()
+        del self.texts['0']
+        l=[]
+        with open("res/fr.txt", 'r') as f:
+            for line in f:
+                l.append(line.rstrip())
+        result = []
+        with open("res/fr.txt", 'w') as ff:
+            for i in l:
+                good = True
+                for letter in i:
+                    if not letter.lower() in 'abcdefghijklmnopqrstuvwxyz':
+                        good = False
+                if good:
+                    ff.write(i.upper()+'\n')
+                    print(i.upper())
+        self.started = True
+
+
+        
 
 if __name__ == "__main__":
     G = game()
     G.menu_btn()
     G.update()
     G.button_words.disable()
-    G.text((50,50), "BONSOIR", 2)
+    G.text((5,5), "By kikookraft", 0)
     tmp_txt= G.title(0, "NOT Wordle")
     load_animation = False
     loading_text = "Chargement du niveau"
@@ -80,9 +107,9 @@ if __name__ == "__main__":
             if event.type == pygame.QUIT:
                 G.is_running = False
             if event.type == pygame.USEREVENT and event.user_type == 'ui_button_pressed':
-                if event.ui_element == G.button_play:
+                if event.ui_element == G.button_play and not G.started:
                     load_animation = True
-                    
+                    G.start()
                 if event.ui_element == G.button_words:
                     pass
                 if event.ui_element == G.button_quit:
@@ -103,9 +130,15 @@ if __name__ == "__main__":
                 if G.title_letter >= 3: G.title_letter = 0
                 if G.title_letter>len(loading_text):
                     load_animation = False
+            if G.started:
+                load_animation = False
+                tmp_txt.kill()
+                
 
         G.manager.update(time_delta)
         G.window_surface.blit(G.background, (0, 0))
         G.manager.draw_ui(G.window_surface)
+        for txt in G.texts:
+            G.window_surface.blit(G.texts[txt][0], G.texts[txt][1])
         pygame.display.update()
         G.tick += 1
