@@ -1,7 +1,9 @@
 from re import S
 from turtle import screensize
+from matplotlib.pyplot import title
 import pygame
 import pygame_gui
+from simplejson import load
 
 class game():
     def __init__(self):
@@ -16,6 +18,10 @@ class game():
         pygame.init()
         pygame.display.set_caption('Not Wordle')
         game.manager = pygame_gui.UIManager(self.screen_size)
+        game.texts = []
+        game.font = pygame.font.SysFont("res/font/AnonymousPro-Bold.ttf", 24)
+        game.tick = 0
+        game.title_letter = 0
 
     def menu_btn(self):
         #self.screen_size = (self.window_surface.get_width(), self.window_surface.get_height())
@@ -31,14 +37,22 @@ class game():
         self.button_quit = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((coord_x, coord_y + 200*y_ptage), (btn_width, btn_height)),text='NE PLUS JOUER',manager=self.manager)
         self.btn = [self.button_play, self.button_quit, self.button_words]
     
-    def title(self):
+    def title(self, coord=0, txt="titre"):
         center_x = self.screen_size[0]/2
         center_y = self.screen_size[1]/2
-        btn_width = 200
-        btn_height = 50
-        coord_x = center_x - btn_width/2
-        coord_y = center_y - btn_height/2
+        txt_width = 200
+        txt_height = 50
+        coord_x = center_x - txt_width/2
+        coord_y = center_y - txt_height/2
         y_ptage = coord_y/self.screen_size[1]
+        if coord == 0: coord = (coord_x, coord_y - 500*y_ptage)
+        text = pygame_gui.elements.UILabel(relative_rect=pygame.Rect(coord,(txt_width, txt_height)), text=txt, manager=self.manager)
+        return text
+
+    def text(self, pos, text, id, color=(255,255,255)):
+        tx = self.font.render(text, True, color)
+        game.window_surface.blit(tx, pos)
+        game.texts.append({'id':id, 'data':tx})
 
     def update(self):
         self.screen_size = (self.window_surface.get_width(), self.window_surface.get_height())
@@ -53,25 +67,45 @@ if __name__ == "__main__":
     G = game()
     G.menu_btn()
     G.update()
+    G.button_words.disable()
+    G.text((50,50), "BONSOIR", 2)
+    tmp_txt= G.title(0, "NOT Wordle")
+    load_animation = False
+    loading_text = "Chargement du niveau"
     
 
-    while game.is_running:
-        time_delta = game.clock.tick(game.FPS)/1000.0
+    while G.is_running:
+        time_delta = G.clock.tick(G.FPS)/1000.0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                game.is_running = False
+                G.is_running = False
             if event.type == pygame.USEREVENT and event.user_type == 'ui_button_pressed':
                 if event.ui_element == G.button_play:
-                    print('Hello World!')
+                    load_animation = True
+                    
+                if event.ui_element == G.button_words:
+                    pass
+                if event.ui_element == G.button_quit:
+                    pygame.quit()
+                    quit()
 
             if event.type == pygame.VIDEORESIZE:
                 surface = pygame.display.set_mode((event.w, event.h),pygame.RESIZABLE)
-                game.screen_size = (event.w, event.h)
+                G.screen_size = (event.w, event.h)
                 G.update()
-            game.manager.process_events(event)
+            G.manager.process_events(event)
 
-        game.manager.update(time_delta)
+        if load_animation:
+            if G.tick%15==0:
+                tmp_txt.kill()
+                G.title_letter += 1
+                tmp_txt= G.title(0, loading_text+"."*G.title_letter)
+                if G.title_letter >= 3: G.title_letter = 0
+                if G.title_letter>len(loading_text):
+                    load_animation = False
 
-        game.window_surface.blit(game.background, (0, 0))
-        game.manager.draw_ui(game.window_surface)
+        G.manager.update(time_delta)
+        G.window_surface.blit(G.background, (0, 0))
+        G.manager.draw_ui(G.window_surface)
         pygame.display.update()
+        G.tick += 1
