@@ -1,14 +1,13 @@
-from re import S
-from shutil import which
-from turtle import screensize
-from matplotlib.pyplot import title
+from tkinter import font
 import pygame
 import pygame_gui
-from simplejson import load
+import random
 
 class game():
     def __init__(self):
         game.screen_size=(900,800)
+        game.w = self.screen_size[0]
+        game.h = self.screen_size[1]
         game.bg_color='#161E1E'
         game.FPS = 60
         game.window_surface = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
@@ -22,7 +21,6 @@ class game():
         game.texts = {}
         game.font = pygame.font.SysFont("res/font/AnonymousPro-Bold.ttf", 24)
         game.tick = 0
-        game.title_letter = 0
         game.started = False
         game.word = ""
         game.guess = []
@@ -40,22 +38,15 @@ class game():
         self.button_words = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((coord_x, coord_y), (btn_width, btn_height)),text='OPTIONS',manager=self.manager)
         self.button_quit = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((coord_x, coord_y + 200*y_ptage), (btn_width, btn_height)),text='NE PLUS JOUER',manager=self.manager)
         self.btn = [self.button_play, self.button_quit, self.button_words]
-    
-    def title(self, coord=0, txt="titre"):
-        center_x = self.screen_size[0]/2
-        center_y = self.screen_size[1]/2
-        txt_width = 200
-        txt_height = 50
-        coord_x = center_x - txt_width/2
-        coord_y = center_y - txt_height/2
-        y_ptage = coord_y/self.screen_size[1]
-        if coord == 0: coord = (coord_x, coord_y - 500*y_ptage)
-        text = pygame_gui.elements.UILabel(relative_rect=pygame.Rect(coord,(txt_width, txt_height)), text=txt, manager=self.manager)
-        return text
 
-    def text(self, pos, text, id, color=(255,255,255)):
-        tx = self.font.render(text, True, color)
-        game.texts[str(id)]=(tx, pos)
+    def text(self, pos, text, id, color=(255,255,255), size=24, centered=True):
+        ft = pygame.font.SysFont("res/font/AnonymousPro-Bold.ttf", size)
+        tx = ft.render(text, True, color)
+        txt_size = ft.size(text)
+        if centered:
+            game.texts[str(id)]=(tx, (pos[0]*game.w-(txt_size[0]/2), pos[1]*game.h-(txt_size[1]/2)))
+        else:
+            game.texts[str(id)]=(tx, (pos[0]*game.w, pos[1]*game.h))
 
     def update(self):
         self.screen_size = (self.window_surface.get_width(), self.window_surface.get_height())
@@ -75,16 +66,10 @@ class game():
         with open("res/fr.txt", 'r') as f:
             for line in f:
                 l.append(line.rstrip())
-        result = []
-        with open("res/fr.txt", 'w') as ff:
-            for i in l:
-                good = True
-                for letter in i:
-                    if not letter.lower() in 'abcdefghijklmnopqrstuvwxyz':
-                        good = False
-                if good:
-                    ff.write(i.upper()+'\n')
-                    print(i.upper())
+        game.word = random.choice(l)
+        l.clear()
+        self.text((0.5, 0.1), game.word, 1, (0,200,0), 75)
+        
         self.started = True
 
 
@@ -95,11 +80,7 @@ if __name__ == "__main__":
     G.menu_btn()
     G.update()
     G.button_words.disable()
-    G.text((5,5), "By kikookraft", 0)
-    tmp_txt= G.title(0, "NOT Wordle")
-    load_animation = False
-    loading_text = "Chargement du niveau"
-    
+    G.text((0.01,0.01), "By kikookraft", 0, centered=False)
 
     while G.is_running:
         time_delta = G.clock.tick(G.FPS)/1000.0
@@ -108,7 +89,6 @@ if __name__ == "__main__":
                 G.is_running = False
             if event.type == pygame.USEREVENT and event.user_type == 'ui_button_pressed':
                 if event.ui_element == G.button_play and not G.started:
-                    load_animation = True
                     G.start()
                 if event.ui_element == G.button_words:
                     pass
@@ -121,19 +101,6 @@ if __name__ == "__main__":
                 G.screen_size = (event.w, event.h)
                 G.update()
             G.manager.process_events(event)
-
-        if load_animation:
-            if G.tick%15==0:
-                tmp_txt.kill()
-                G.title_letter += 1
-                tmp_txt= G.title(0, loading_text+"."*G.title_letter)
-                if G.title_letter >= 3: G.title_letter = 0
-                if G.title_letter>len(loading_text):
-                    load_animation = False
-            if G.started:
-                load_animation = False
-                tmp_txt.kill()
-                
 
         G.manager.update(time_delta)
         G.window_surface.blit(G.background, (0, 0))
