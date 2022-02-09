@@ -68,7 +68,8 @@ class game():
         self.button_play.kill()
         self.button_quit.kill()
         self.button_words.kill()
-        del self.texts['0']
+        try: del self.texts['0']
+        except: pass
         l=[]
         with open("res/fr.txt", 'r') as f:
             for line in f:
@@ -86,17 +87,21 @@ class game():
         return str(id)
 
     def game_ui(self):
-        box_size = 0.8/(len(game.word)*1.33)
-        space_between = box_size/8
-        space_below = box_size/2
+        box_size = 0.9/(len(game.word)*1.33)
+        space_between = 0.01
+        space_below = 0.02
         lines = len(game.word)
-        y_offset = 0.5-(box_size*lines+space_below*lines)/2
+        y_offset = (0.5-(box_size*(lines+1)+space_below*(lines-1))/2)+0.03
         for i in range(lines+1):
-            x_offset = 0.5-(box_size*lines+space_between*lines)/2
+            x_offset = 0.5-(box_size*(lines-1)+space_between*lines)/2
             for j in range(lines):
                 self.draw_rect("{} {}".format(i,j), (x_offset,y_offset),(box_size,box_size),keep_ratio=True)
-                x_offset+= box_size+space_between
-            y_offset+=box_size+space_below
+                x_offset+= box_size
+                if j<lines-1:
+                    x_offset+=space_between
+            y_offset+=box_size
+            if i<lines:
+                y_offset+=space_below
 
 
 if __name__ == "__main__":
@@ -113,6 +118,15 @@ if __name__ == "__main__":
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 G.is_running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE and G.started:
+                    G.start()
+                    G.update()
+                    G.rect.clear()
+                    G.game_ui()
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    quit()
             if event.type == pygame.USEREVENT and event.user_type == 'ui_button_pressed':
                 if event.ui_element == G.button_play and not G.started:
                     G.start()
@@ -129,6 +143,8 @@ if __name__ == "__main__":
                 G.h = event.h
                 G.update()
                 G.button_words.disable()
+                G.rect.clear()
+                G.game_ui()
                 try:del G.texts[kik]
                 except:pass
             G.manager.process_events(event)
@@ -139,11 +155,13 @@ if __name__ == "__main__":
         for txt in G.texts:
             G.window_surface.blit(G.texts[txt][0], G.texts[txt][1])
         for rect in G.rect:
-            x= G.rect[rect]['pos'][0]*G.w - G.rect[rect]['size'][0]*G.w/2 ## centrer en x
-            y= G.rect[rect]['pos'][1]*G.h - G.rect[rect]['size'][1]*G.h/2 ## centrer en y
             if G.rect[rect]['ratio']:
+                x= G.rect[rect]['pos'][0]*G.w - G.rect[rect]['size'][1]*G.h/2 ## centrer en x
+                y= G.rect[rect]['pos'][1]*G.h - G.rect[rect]['size'][1]*G.h/2 ## centrer en y
                 box = pygame.Rect(x, y, G.rect[rect]['size'][1]*G.h, G.rect[rect]['size'][1]*G.h)
             else:
+                x= G.rect[rect]['pos'][0]*G.w - G.rect[rect]['size'][0]*G.w/2 ## centrer en x
+                y= G.rect[rect]['pos'][1]*G.h - G.rect[rect]['size'][1]*G.h/2 ## centrer en y
                 box = pygame.Rect(x, y, G.rect[rect]['size'][0]*G.w, G.rect[rect]['size'][1]*G.h)
             pygame.draw.rect(G.window_surface, G.rect[rect]['color'], box)
         pygame.display.update()
