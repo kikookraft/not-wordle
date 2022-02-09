@@ -10,6 +10,7 @@ class game():
         game.w = self.screen_size[0]
         game.h = self.screen_size[1]
         game.bg_color='#141414'
+        game.general_font = "res/font/UbuntuMono-Bold.ttf"
         game.FPS = 60
         game.window_surface = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
         game.background = pygame.Surface(self.screen_size)
@@ -17,16 +18,22 @@ class game():
         game.is_running = True
         game.clock = pygame.time.Clock()
         pygame.init()
+        pygame.key.set_repeat(600, 75)
         pygame.display.set_caption('Not Wordle')
         game.manager = pygame_gui.UIManager(self.screen_size)
         game.texts = {}
         game.letters = {}
         game.rect = {}
-        game.font = pygame.font.SysFont("res/font/AnonymousPro-Bold.ttf", 24)
+        game.font = pygame.font.SysFont(self.general_font, 24)
         game.tick = 0
         game.started = False
         game.word = ""
         game.guess = []
+        game.input_text = ""
+        game.line = 0
+        game.id = 0
+        game.char_size = 150
+        game.char_size_set = False
     
     def beizer(self, x):
         return x**2*(3-2*x)
@@ -46,7 +53,7 @@ class game():
         self.btn = [self.button_play, self.button_quit, self.button_words]
 
     def text(self, pos, text, id, color=(255,255,255), size=24, centered=True):
-        ft = pygame.font.SysFont("res/font/AnonymousPro-Bold.ttf", size)
+        ft = pygame.font.SysFont(self.general_font, size)
         tx = ft.render(text, True, color)
         txt_size = ft.size(text)
         if centered:
@@ -56,19 +63,38 @@ class game():
         return str(id)
 
     def put_char(self, txt, idx):
-        size = 150
         color = (255,255,255)
-        ft = pygame.font.SysFont("res/font/AnonymousPro-Bold.ttf", size)
+        ft = pygame.font.SysFont(self.general_font, game.char_size)
         txt_size = ft.size(txt)
-        while txt_size[0]/game.w > game.rect[idx]['size'][0] or txt_size[1]/game.h > game.rect[idx]['size'][1]:
-            size-=1
-            ft = pygame.font.SysFont("res/font/AnonymousPro-Bold.ttf", size)
-            txt_size = ft.size(txt)
+        if not game.char_size_set:
+            if txt_size[0]/game.w > game.rect[idx]['size'][0] or txt_size[1]/game.h > game.rect[idx]['size'][1]:
+                while txt_size[0]/game.w > game.rect[idx]['size'][0] or txt_size[1]/game.h > game.rect[idx]['size'][1]:
+                    game.char_size-=1
+                    ft = pygame.font.SysFont(self.general_font, game.char_size)
+                    txt_size = ft.size(txt)
+            elif txt_size[1]/game.h < game.rect[idx]['size'][1]:
+                while txt_size[1]/game.h < game.rect[idx]['size'][1]:
+                    game.char_size+=1
+                    ft = pygame.font.SysFont(self.general_font, game.char_size)
+                    txt_size = ft.size(txt)
+                game.char_size-=1
+                ft = pygame.font.SysFont(self.general_font, game.char_size)
+                txt_size = ft.size(txt)
+            game.char_size_set = True
         tx = ft.render(txt, True, color)
-        x= game.rect[idx]['pos'][0] + game.rect[idx]['size'][0]/2
+        x= game.rect[idx]['pos'][0] + (txt_size[0]/2)/game.w
         y= game.rect[idx]['pos'][1] + game.rect[idx]['size'][1]/2
-        game.letters[str(id)]= {'data':tx,'pos':(x,y)}
-        return str(id)
+        game.id +=1
+        game.letters[str(game.id)]= {'data':tx,'pos':(x,y),'size':txt_size, 'ref':idx}
+        return str(game.id)
+    
+    def convert_text(self,txt):
+        i=0
+        for letter in txt:
+            idx = f"{game.line} {i}"
+            self.put_char(letter.upper(), idx)
+            i+=1
+        return
 
     def update(self):
         self.screen_size = (self.window_surface.get_width(), self.window_surface.get_height())
@@ -94,6 +120,7 @@ class game():
         l.clear()
         self.texts.clear()
         #self.text((0.5, 0.1), game.word, 1, (0,200,0), 75)
+        game.char_size_set=False
         print(self.word)
         self.game_ui()
         self.started = True
@@ -133,7 +160,10 @@ class game():
         for txt in game.texts:
             game.window_surface.blit(game.texts[txt][0], game.texts[txt][1])
         for txt in game.letters:
-            game.window_surface.blit(game.texts[txt]['pos'][0], game.texts[txt]['pos'][1])
+            x= game.letters[txt]['pos'][0]*game.w - game.letters[txt]['size'][0] ## centrer en x
+            y= game.letters[txt]['pos'][1]*game.h - game.letters[txt]['size'][1] ## centrer en y
+            #pygame.draw.rect(game.window_surface, (200,0,0), pygame.Rect(x,y,game.letters[txt]['size'][0],game.letters[txt]['size'][1]))
+            game.window_surface.blit(game.letters[txt]['data'], (x,y))
         
 
 
@@ -143,7 +173,7 @@ if __name__ == "__main__":
     G.update()
     G.button_words.disable()
     kik = G.text((0.01,0.01), "By kikookraft", 0, centered=False)
-    title = G.text((0.5,0.1), "Defenitly not Wordle", 1, size=50)
+    title = G.text((0.5,0.1), "Definitely not Wordle", 1, size=50)
 
 
     while G.is_running:
@@ -153,6 +183,7 @@ if __name__ == "__main__":
                 G.is_running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and G.started:
+                    G.char_size_set = False
                     G.start()
                     G.update()
                     G.rect.clear()
@@ -160,6 +191,19 @@ if __name__ == "__main__":
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
                     quit()
+                if G.started:
+                    if event.key == pygame.K_BACKSPACE:
+                        if len(G.input_text)>0:
+                            G.input_text = G.input_text[:-1]
+                            G.update()
+                            G.letters.clear()
+                            G.convert_text(G.input_text)
+                    elif len(G.input_text)<len(G.word) and event.unicode in "abcdefghijklmnopqrstuvwxyz":
+                        G.update()
+                        G.letters.clear()
+                        G.input_text += event.unicode
+                        G.convert_text(G.input_text)
+                    
             if event.type == pygame.USEREVENT and event.user_type == 'ui_button_pressed':
                 if event.ui_element == G.button_play and not G.started:
                     G.start()
