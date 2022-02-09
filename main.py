@@ -9,7 +9,7 @@ class game():
         game.screen_size=(900,800)
         game.w = self.screen_size[0]
         game.h = self.screen_size[1]
-        game.bg_color='#0A0A0A'
+        game.bg_color='#141414'
         game.FPS = 60
         game.window_surface = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
         game.background = pygame.Surface(self.screen_size)
@@ -20,6 +20,7 @@ class game():
         pygame.display.set_caption('Not Wordle')
         game.manager = pygame_gui.UIManager(self.screen_size)
         game.texts = {}
+        game.letters = {}
         game.rect = {}
         game.font = pygame.font.SysFont("res/font/AnonymousPro-Bold.ttf", 24)
         game.tick = 0
@@ -49,15 +50,30 @@ class game():
         tx = ft.render(text, True, color)
         txt_size = ft.size(text)
         if centered:
-            game.texts[str(id)]=(tx, (pos[0]*game.w-(txt_size[0]/2), pos[1]*game.h-(txt_size[1]/2)))
+            game.texts[str(id)]=(tx, (pos[0]*game.w-(txt_size[0]/2), pos[1]*game.h-(txt_size[1]/2)), txt_size)
         else:
             game.texts[str(id)]=(tx, (pos[0]*game.w, pos[1]*game.h))
+        return str(id)
+
+    def put_char(self, txt, idx):
+        size = 150
+        color = (255,255,255)
+        ft = pygame.font.SysFont("res/font/AnonymousPro-Bold.ttf", size)
+        txt_size = ft.size(txt)
+        while txt_size[0]/game.w > game.rect[idx]['size'][0] or txt_size[1]/game.h > game.rect[idx]['size'][1]:
+            size-=1
+            ft = pygame.font.SysFont("res/font/AnonymousPro-Bold.ttf", size)
+            txt_size = ft.size(txt)
+        tx = ft.render(txt, True, color)
+        x= game.rect[idx]['pos'][0] + game.rect[idx]['size'][0]/2
+        y= game.rect[idx]['pos'][1] + game.rect[idx]['size'][1]/2
+        game.letters[str(id)]= {'data':tx,'pos':(x,y)}
         return str(id)
 
     def update(self):
         self.screen_size = (self.window_surface.get_width(), self.window_surface.get_height())
         game.window_surface = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
-        pygame.draw.rect(self.window_surface, (10,10,10), (0,0,self.screen_size[0], self.screen_size[1]))
+        pygame.draw.rect(self.window_surface, (20,20,20), (0,0,self.screen_size[0], self.screen_size[1]))
         game.manager = pygame_gui.UIManager(self.screen_size)
         if not self.started:
             for i in self.btn:
@@ -82,7 +98,7 @@ class game():
         self.game_ui()
         self.started = True
 
-    def draw_rect(self, id, pos, size, color=(30,30,30), keep_ratio = False):
+    def draw_rect(self, id, pos, size, color=(50,50,50), keep_ratio = False):
         self.rect[str(id)] = {'pos':pos, 'size':size, 'color':color, 'ratio':keep_ratio}
         return str(id)
 
@@ -102,6 +118,23 @@ class game():
             y_offset+=box_size
             if i<lines:
                 y_offset+=space_below
+    
+    def refresh(self):
+        for rect in game.rect:
+            if game.rect[rect]['ratio']:
+                x= game.rect[rect]['pos'][0]*game.w - game.rect[rect]['size'][1]*game.h/2 ## centrer en x
+                y= game.rect[rect]['pos'][1]*game.h - game.rect[rect]['size'][1]*game.h/2 ## centrer en y
+                box = pygame.Rect(x, y, game.rect[rect]['size'][1]*game.h, game.rect[rect]['size'][1]*game.h)
+            else:
+                x= game.rect[rect]['pos'][0]*game.w - game.rect[rect]['size'][0]*game.w/2 ## centrer en x
+                y= game.rect[rect]['pos'][1]*game.h - game.rect[rect]['size'][1]*game.h/2 ## centrer en y
+                box = pygame.Rect(x, y, game.rect[rect]['size'][0]*game.w, game.rect[rect]['size'][1]*game.h)
+            pygame.draw.rect(game.window_surface, game.rect[rect]['color'], box)
+        for txt in game.texts:
+            game.window_surface.blit(game.texts[txt][0], game.texts[txt][1])
+        for txt in game.letters:
+            game.window_surface.blit(game.texts[txt]['pos'][0], game.texts[txt]['pos'][1])
+        
 
 
 if __name__ == "__main__":
@@ -148,21 +181,9 @@ if __name__ == "__main__":
                 try:del G.texts[kik]
                 except:pass
             G.manager.process_events(event)
-
         G.manager.update(time_delta)
         G.window_surface.blit(G.background, (0, 0))
         G.manager.draw_ui(G.window_surface)
-        for txt in G.texts:
-            G.window_surface.blit(G.texts[txt][0], G.texts[txt][1])
-        for rect in G.rect:
-            if G.rect[rect]['ratio']:
-                x= G.rect[rect]['pos'][0]*G.w - G.rect[rect]['size'][1]*G.h/2 ## centrer en x
-                y= G.rect[rect]['pos'][1]*G.h - G.rect[rect]['size'][1]*G.h/2 ## centrer en y
-                box = pygame.Rect(x, y, G.rect[rect]['size'][1]*G.h, G.rect[rect]['size'][1]*G.h)
-            else:
-                x= G.rect[rect]['pos'][0]*G.w - G.rect[rect]['size'][0]*G.w/2 ## centrer en x
-                y= G.rect[rect]['pos'][1]*G.h - G.rect[rect]['size'][1]*G.h/2 ## centrer en y
-                box = pygame.Rect(x, y, G.rect[rect]['size'][0]*G.w, G.rect[rect]['size'][1]*G.h)
-            pygame.draw.rect(G.window_surface, G.rect[rect]['color'], box)
+        G.refresh()
         pygame.display.update()
         G.tick += 1
