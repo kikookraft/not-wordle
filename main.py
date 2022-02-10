@@ -204,7 +204,7 @@ if __name__ == "__main__":
                         G.input_text += event.unicode
                         G.convert_text(G.input_text)
                     
-            if event.type == pygame.USEREVENT and event.user_type == 'ui_button_pressed':
+            if event.type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == G.button_play and not G.started:
                     G.start()
                 if event.ui_element == G.button_words:
