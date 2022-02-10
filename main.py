@@ -1,14 +1,13 @@
-## Written in python 3.8.5 with pygame 2.0.0
+## Written in python 3.8.5 with pygame 2.1.2 (SDL 2.0.18)
 
 # --- BUGS ---
 # - Problèmes de redimensionement (linux, pygame 2.1.2 && python 3.8.10)
-# - Limiter le nombre de saisies
-#
+# - TODO: Limiter le nombre de saisies
+# - Laisser les textes précédents affichés
 #
 
-from curses import KEY_ENTER
-import pygame
-import pygame_gui
+import pygame #2.1.2
+import pygame_gui #0.6.4
 import random
 
 class game():
@@ -98,6 +97,7 @@ class game():
     
     def convert_text(self,txt, line=0):
         i=0
+        print(txt)
         for letter in txt:
             idx = f"{line} {i}"
             self.put_char(letter.upper(), idx)
@@ -126,7 +126,7 @@ class game():
     def game_loop(self):
         i=0
         for wrd in game.guess:
-            game.convert_text(wrd,i)
+            game.convert_text(self, wrd, i)
             i+=1
 
     def draw_rect(self, id, pos, size, color=(50,50,50), keep_ratio = False):
