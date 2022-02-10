@@ -187,6 +187,7 @@ if __name__ == "__main__":
                     G.start()
                     G.update()
                     G.rect.clear()
+                    G.letters.clear()
                     G.game_ui()
                 if event.key == pygame.K_ESCAPE:
                     pygame.quit()
@@ -221,7 +222,8 @@ if __name__ == "__main__":
                 G.update()
                 G.button_words.disable()
                 G.rect.clear()
-                G.game_ui()
+                if G.started:
+                    G.game_ui()
                 try:del G.texts[kik]
                 except:pass
             G.manager.process_events(event)
