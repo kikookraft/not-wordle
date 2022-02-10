@@ -1,5 +1,12 @@
 ## Written in python 3.8.5 with pygame 2.0.0
 
+# --- BUGS ---
+# - Problèmes de redimensionement (linux, pygame 2.1.2 && python 3.8.10)
+# - Limiter le nombre de saisies
+#
+#
+
+from curses import KEY_ENTER
 import pygame
 import pygame_gui
 import random
@@ -86,25 +93,16 @@ class game():
         y= game.rect[idx]['pos'][1] + game.rect[idx]['size'][1]/2
         game.id +=1
         game.letters[str(game.id)]= {'data':tx,'pos':(x,y),'size':txt_size, 'ref':idx}
+        print(game.id,">>", idx)
         return str(game.id)
     
-    def convert_text(self,txt):
+    def convert_text(self,txt, line=0):
         i=0
         for letter in txt:
-            idx = f"{game.line} {i}"
+            idx = f"{line} {i}"
             self.put_char(letter.upper(), idx)
             i+=1
         return
-
-    def update(self):
-        self.screen_size = (self.window_surface.get_width(), self.window_surface.get_height())
-        game.window_surface = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
-        pygame.draw.rect(self.window_surface, (20,20,20), (0,0,self.screen_size[0], self.screen_size[1]))
-        game.manager = pygame_gui.UIManager(self.screen_size)
-        if not self.started:
-            for i in self.btn:
-                i.kill()
-            self.menu_btn()
     
     def start(self):
         self.button_play.kill()
@@ -121,9 +119,15 @@ class game():
         self.texts.clear()
         #self.text((0.5, 0.1), game.word, 1, (0,200,0), 75)
         game.char_size_set=False
-        print(self.word)
+        #print(self.word)
         self.game_ui()
         self.started = True
+
+    def game_loop(self):
+        i=0
+        for wrd in game.guess:
+            game.convert_text(wrd,i)
+            i+=1
 
     def draw_rect(self, id, pos, size, color=(50,50,50), keep_ratio = False):
         self.rect[str(id)] = {'pos':pos, 'size':size, 'color':color, 'ratio':keep_ratio}
@@ -145,6 +149,16 @@ class game():
             y_offset+=box_size
             if i<lines:
                 y_offset+=space_below
+
+    def update(self):
+        self.screen_size = (self.window_surface.get_width(), self.window_surface.get_height())
+        game.window_surface = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
+        pygame.draw.rect(self.window_surface, (20,20,20), (0,0,self.screen_size[0], self.screen_size[1]))
+        game.manager = pygame_gui.UIManager(self.screen_size)
+        if not self.started:
+            for i in self.btn:
+                i.kill()
+            self.menu_btn()
     
     def refresh(self):
         for rect in game.rect:
@@ -198,12 +212,23 @@ if __name__ == "__main__":
                             G.input_text = G.input_text[:-1]
                             G.update()
                             G.letters.clear()
-                            G.convert_text(G.input_text)
+                            G.convert_text(G.input_text,G.line)
+                    elif event.key == pygame.K_RETURN:
+                        if len(G.input_text)==len(G.word):
+                            G.guess.append(G.input_text)
+                            G.input_text=""
+                            G.line+=1
+                        else:
+                            print("Texte trop court")
+                        G.game_loop()
+                        G.update()
+                        G.letters.clear()
+                        G.convert_text(G.input_text,G.line)
                     elif len(G.input_text)<len(G.word) and event.unicode in "abcdefghijklmnopqrstuvwxyz":
                         G.update()
                         G.letters.clear()
                         G.input_text += event.unicode
-                        G.convert_text(G.input_text)
+                        G.convert_text(G.input_text,G.line)
                     
             if event.type == pygame_gui.UI_BUTTON_PRESSED:
                 if event.ui_element == G.button_play and not G.started:
