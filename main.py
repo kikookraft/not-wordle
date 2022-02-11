@@ -2,17 +2,20 @@
 
 # --- BUGS ---
 # - Problèmes de redimensionement (linux, pygame 2.1.2 && python 3.8.10)
-# - TODO: Limiter le nombre de saisies
-# - Laisser les textes précédents affichés
-#
 
+from itertools import count
+from matplotlib import bezier
 import pygame #2.1.2
 import pygame_gui #0.6.4
 import random
 
+from telegram import Game
+
 class game():
     def __init__(self):
         game.screen_size=(900,800)
+        game.color_good = (70,200,70)
+        game.color_almost = (200,200,70)
         game.w = self.screen_size[0]
         game.h = self.screen_size[1]
         game.bg_color='#141414'
@@ -30,6 +33,7 @@ class game():
         game.texts = {}
         game.letters = {}
         game.rect = {}
+        #game.color_rect = {}
         game.font = pygame.font.SysFont(self.general_font, 24)
         game.tick = 0
         game.started = False
@@ -40,6 +44,7 @@ class game():
         game.id = 0
         game.char_size = 150
         game.char_size_set = False
+        game.full = False
     
     def beizer(self, x):
         return x**2*(3-2*x)
@@ -91,13 +96,12 @@ class game():
         x= game.rect[idx]['pos'][0] + (txt_size[0]/2)/game.w
         y= game.rect[idx]['pos'][1] + game.rect[idx]['size'][1]/2
         game.id +=1
-        game.letters[str(game.id)]= {'data':tx,'pos':(x,y),'size':txt_size, 'ref':idx}
-        print(game.id,">>", idx)
+        game.letters[str(game.id)] = {'data':tx, 'pos':(x,y), 'size':txt_size, 'ref':idx, 'char': txt, 'line': idx.split()[0], 'column':idx.split()[1]}
+        #print(game.id,">>", idx)
         return str(game.id)
     
     def convert_text(self,txt, line=0):
         i=0
-        print(txt)
         for letter in txt:
             idx = f"{line} {i}"
             self.put_char(letter.upper(), idx)
@@ -116,7 +120,7 @@ class game():
                 l.append(line.rstrip())
         game.word = random.choice(l)
         l.clear()
-        self.texts.clear()
+        self.texts.clear() 
         #self.text((0.5, 0.1), game.word, 1, (0,200,0), 75)
         game.char_size_set=False
         #print(self.word)
@@ -128,9 +132,12 @@ class game():
         for wrd in game.guess:
             game.convert_text(self, wrd, i)
             i+=1
+        if self.line >= len(game.word)+1:
+            game.full = True
+        
 
     def draw_rect(self, id, pos, size, color=(50,50,50), keep_ratio = False):
-        self.rect[str(id)] = {'pos':pos, 'size':size, 'color':color, 'ratio':keep_ratio}
+        self.rect[str(id)] = {'pos':pos, 'size':size, 'color':color, 'ratio':keep_ratio, 'state':None, 'state_done': False}
         return str(id)
 
     def game_ui(self):
@@ -159,8 +166,9 @@ class game():
             for i in self.btn:
                 i.kill()
             self.menu_btn()
+
     
-    def refresh(self):
+    def refresh(self): #TODO Réactiver le resize correct
         for rect in game.rect:
             if game.rect[rect]['ratio']:
                 x= game.rect[rect]['pos'][0]*game.w - game.rect[rect]['size'][1]*game.h/2 ## centrer en x
@@ -170,7 +178,24 @@ class game():
                 x= game.rect[rect]['pos'][0]*game.w - game.rect[rect]['size'][0]*game.w/2 ## centrer en x
                 y= game.rect[rect]['pos'][1]*game.h - game.rect[rect]['size'][1]*game.h/2 ## centrer en y
                 box = pygame.Rect(x, y, game.rect[rect]['size'][0]*game.w, game.rect[rect]['size'][1]*game.h)
-            pygame.draw.rect(game.window_surface, game.rect[rect]['color'], box)
+            color = game.rect[rect]['color']
+            if game.rect[rect]['state_done'] == False and game.rect[rect]['state'] != None:
+                if not 'state_end' in game.rect[rect].keys():
+                    game.rect[rect]['state_end'] = self.tick + game.FPS
+                if game.rect[rect]['state'] == 1:
+                    color1 = color[0] + ((game.color_good[0]-color[0]) * self.beizer(1-((game.rect[rect]['state_end']-self.tick)/game.FPS)))
+                    color2 = color[1] + ((game.color_good[1]-color[1]) * self.beizer(1-((game.rect[rect]['state_end']-self.tick)/game.FPS)))
+                    color3 = color[2] + ((game.color_good[2]-color[2]) * self.beizer(1-((game.rect[rect]['state_end']-self.tick)/game.FPS)))
+                    color = (color1, color2, color3)
+                elif game.rect[rect]['state'] == 2:
+                    color1 = color[0] + ((game.color_almost[0]-color[0]) * self.beizer(1-((game.rect[rect]['state_end']-self.tick)/game.FPS)))
+                    color2 = color[1] + ((game.color_almost[1]-color[1]) * self.beizer(1-((game.rect[rect]['state_end']-self.tick)/game.FPS)))
+                    color3 = color[2] + ((game.color_almost[2]-color[2]) * self.beizer(1-((game.rect[rect]['state_end']-self.tick)/game.FPS)))
+                    color = (color1, color2, color3)
+                if game.rect[rect]['state_end'] <= self.tick:
+                    game.rect[rect]['color'] = color
+                    game.rect[rect]['state_done'] = True
+            pygame.draw.rect(game.window_surface, color, box)
         for txt in game.texts:
             game.window_surface.blit(game.texts[txt][0], game.texts[txt][1])
         for txt in game.letters:
@@ -178,7 +203,23 @@ class game():
             y= game.letters[txt]['pos'][1]*game.h - game.letters[txt]['size'][1] ## centrer en y
             #pygame.draw.rect(game.window_surface, (200,0,0), pygame.Rect(x,y,game.letters[txt]['size'][0],game.letters[txt]['size'][1]))
             game.window_surface.blit(game.letters[txt]['data'], (x,y))
-        
+        #self.game_loop() #TODO Remetre game.loop en enlevant le lag
+
+    def display_fps(self):
+        text_to_show = game.font.render(str(int(game.clock.get_fps())), True, (200,50,50))
+        game.window_surface.blit(text_to_show, (5,5))
+
+    def check_word(self):
+        for text in game.letters:
+            if game.letters[text]['line'] == str(game.line):
+                #print(game.word[int(game.letters[text]['column'])],"##",game.letters[text]['char'],"##", game.letters[text]['char'] in game.word)
+                if game.word[int(game.letters[text]['column'])] == game.letters[text]['char']:
+                    game.rect[game.letters[text]['ref']]['state'] = 1
+                    #print(game.rect[game.letters[text]['ref']])
+                elif game.letters[text]['char'] in game.word:
+                    game.rect[game.letters[text]['ref']]['state'] = 2
+                    #print(game.rect[game.letters[text]['ref']])
+                
 
 
 if __name__ == "__main__":
@@ -186,7 +227,7 @@ if __name__ == "__main__":
     G.menu_btn()
     G.update()
     G.button_words.disable()
-    kik = G.text((0.01,0.01), "By kikookraft", 0, centered=False)
+    kik = G.text((0.01,0.95), "By kikookraft", 0, centered=False)
     title = G.text((0.5,0.1), "Definitely not Wordle", 1, size=50)
 
 
@@ -200,7 +241,7 @@ if __name__ == "__main__":
                     G.char_size_set = False
                     G.start()
                     G.update()
-                    G.rect.clear()
+                    #G.rect.clear()
                     G.letters.clear()
                     G.game_ui()
                 if event.key == pygame.K_ESCAPE:
@@ -214,16 +255,16 @@ if __name__ == "__main__":
                             G.letters.clear()
                             G.convert_text(G.input_text,G.line)
                     elif event.key == pygame.K_RETURN:
-                        if len(G.input_text)==len(G.word):
+                        if len(G.input_text)==len(G.word) and not G.full:
+                            G.check_word()
+                            G.update()
+                            G.letters.clear()
+                            G.convert_text(G.input_text,G.line)
                             G.guess.append(G.input_text)
                             G.input_text=""
                             G.line+=1
                         else:
                             print("Texte trop court")
-                        G.game_loop()
-                        G.update()
-                        G.letters.clear()
-                        G.convert_text(G.input_text,G.line)
                     elif len(G.input_text)<len(G.word) and event.unicode in "abcdefghijklmnopqrstuvwxyz":
                         G.update()
                         G.letters.clear()
@@ -256,5 +297,6 @@ if __name__ == "__main__":
         G.window_surface.blit(G.background, (0, 0))
         G.manager.draw_ui(G.window_surface)
         G.refresh()
+        G.display_fps()
         pygame.display.update()
         G.tick += 1
