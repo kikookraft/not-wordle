@@ -4,6 +4,10 @@
 # - Problèmes de redimensionement (linux, pygame 2.1.2 && python 3.8.10)
 # TODO Dessiner flèche pour indiquer la ligne éditable
 # TODO Empecher plusieures mêmes lettres d'avoir les couleurs
+# TODO Créer système pour ne pas avoir 2 fois le même mot
+#      (y faire avec un fichier texte)
+# TODO Le menu pour voir les mots
+# TODO Le bouton permettant de suprimmer les mots inconnus
 
 import pygame #2.1.2
 import pygame_gui #0.6.4
