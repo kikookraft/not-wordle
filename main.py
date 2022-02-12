@@ -2,7 +2,6 @@
 
 # --- BUGS ---
 # - Problèmes de redimensionement (linux, pygame 2.1.2 && python 3.8.10)
-# TODO Empecher plusieures mêmes lettres d'avoir les couleurs
 # TODO Créer système pour ne pas avoir 2 fois le même mot
 #      (y faire avec un fichier texte)
 # TODO Le menu pour voir les mots
@@ -72,22 +71,22 @@ if __name__ == "__main__":
                     pygame.quit()
                     quit()
 
-            if event.type == pygame.VIDEORESIZE:
-                surface = pygame.display.set_mode((event.w, event.h),pygame.RESIZABLE)
-                G.screen_size = (event.w, event.h)
-                G.w = event.w
-                G.h = event.h
-                G.letters.clear()
-                G.refresh()
-                G.update()
-                G.button_words.disable()
-                G.rect.clear()
-                if G.started:
-                    G.game_ui()
-                    G.convert_text(G.input_text,G.line)
-                    G.game_loop()
-                try:del G.texts[kik]
-                except:pass
+            # if event.type == pygame.VIDEORESIZE:
+            #     surface = pygame.display.set_mode((event.w, event.h))#,pygame.RESIZABLE
+            #     G.screen_size = (event.w, event.h)
+            #     G.w = event.w
+            #     G.h = event.h
+            #     G.letters.clear()
+            #     G.refresh()
+            #     G.update()
+            #     G.button_words.disable()
+            #     G.rect.clear()
+            #     if G.started:
+            #         G.game_ui()
+            #         G.convert_text(G.input_text,G.line)
+            #         G.game_loop()
+            #     try:del G.texts[kik]
+            #     except:pass
             G.manager.process_events(event)
         if G.return_menu:
             G.reset()

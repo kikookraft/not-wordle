@@ -4,6 +4,8 @@ import random
 from datetime import datetime
 
 class game():
+    """Classe principale du jeu
+    """
     def __init__(self):
         game.screen_size=(900,800)
         game.color_good = (70,170,50)
@@ -15,8 +17,12 @@ class game():
         self.h = self.screen_size[1]
         game.bg_color='#141414'
         game.general_font = "res/font/UbuntuMono-Bold.ttf"
+        pygame.mixer.init()
+        pygame.mixer.music.load("res/bensound-dreams.mp3")
+        pygame.mixer.music.set_volume(0.2)
+        pygame.mixer.music.play(-1)
         game.FPS = 60
-        self.window_surface = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE)
+        self.window_surface = pygame.display.set_mode(self.screen_size) #, pygame.RESIZABLE
         game.background = pygame.Surface(self.screen_size)
         game.background.fill(pygame.Color(self.bg_color))
         game.is_running = True
@@ -143,7 +149,6 @@ class game():
         self.word.upper()
         l.clear()
         self.texts.clear() 
-        #self.text((0.5, 0.1), self.word, 1, (0,200,0), 75)
         game.char_size_set=False
         self.game_ui()
         self.cursor()
@@ -266,14 +271,26 @@ class game():
         self.window_surface.blit(text_to_show, (5,5))
 
     def check_word(self):
+        l=[]
+        good=[]
+        d={}
         for text in game.letters:
             if game.letters[text]['line'] == str(self.line):
+                d[text] = game.letters[text]
                 if self.word[int(game.letters[text]['column'])].upper() == game.letters[text]['char']:
                     game.rect[game.letters[text]['ref']]['state'] = 1
+                    good.append(game.letters[text]['char'].upper())
                 elif game.letters[text]['char'] in self.word.upper():
-                    game.rect[game.letters[text]['ref']]['state'] = 2
+                    l.append(game.letters[text]['char'].upper())
                 else:
                     game.rect[game.letters[text]['ref']]['state'] = 3
+        for dt in d:
+            for i in l:
+                if d[dt]['char'] == i and game.rect[game.letters[dt]['ref']]['state'] != 1:
+                    if not d[dt]['char'] in good:
+                        game.rect[game.letters[dt]['ref']]['state'] = 2
+                    else:
+                        game.rect[game.letters[dt]['ref']]['state'] = 3
                 
     def screenshot(self):
         now = datetime.now()
@@ -311,8 +328,6 @@ class game():
         if id_x < len(self.word)-1 and id_y < len(self.word)+1:
             id = '{} {}'.format(id_y, id_x+1)
             self.rect[id]['cursor'] = False
-
-
 
 
 
