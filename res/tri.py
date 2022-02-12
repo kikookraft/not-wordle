@@ -1,7 +1,7 @@
 l=[]
 n = 0
 nb = 0
-with open("res/fr-pastrié.txt", 'r') as f:
+with open("fr-pastrié.txt", 'r') as f:
     for i in f:
         n+=1
         a = i.rstrip()
@@ -21,7 +21,7 @@ for word in l:
                 words.append(word)
                 nb+=1
 
-with open("res/fr.txt", 'w') as f:
+with open("fr.txt", 'w') as f:
     for wrd in words:
         f.write(wrd+"\n")
 
