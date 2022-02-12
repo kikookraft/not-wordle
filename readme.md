@@ -14,6 +14,7 @@ Ce jeu utilise un fichier de plus de 15 000 mots ['français'](#Problèmes)
 Pour fonctionner le jeu a besoin de ces modules python:
 - pygame (version 2.1.2)
 - pygame_gui (version 0.6.4)
+- datetime
 
 La version de python conseillée est la 3.8.5  
 
