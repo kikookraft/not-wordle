@@ -46,6 +46,8 @@ class game():
         return x**2*(3-2*x)
 
     def menu_btn(self):
+        """Génère les boutons du menu
+        """
         #self.screen_size = (self.window_surface.get_width(), self.window_surface.get_height())
         center_x = self.screen_size[0]/2
         center_y = self.screen_size[1]/2
@@ -60,6 +62,17 @@ class game():
         self.btn = [self.button_play, self.button_quit, self.button_words]
 
     def text(self, pos, text, id, color=(255,255,255), size=24, centered=True):
+        """Génère les textes et les ajoutes dans la liste d'objets a rendre
+        Args:
+            pos (tuple): Position en `x` et `y` en % flottant (0.0 -> 1.0)
+            text (str): Texte a afficher
+            id (str|int): l'id sous lequel le texte sera enregistré
+            color (tuple, optional): Couleur au format RGB.\n Par defaut: (255,255,255) (blanc).
+            size (int, optional): Taille du texte. DPar defaut: 24.
+            centered (bool, optional): Pour centrer (ou décentrer) le texte. Par defaut: True.
+        Returns:
+            int: id de l'objet créé
+        """
         ft = pygame.font.SysFont(self.general_font, size)
         tx = ft.render(text, True, color)
         txt_size = ft.size(text)
@@ -70,6 +83,13 @@ class game():
         return str(id)
 
     def put_char(self, txt, idx):
+        """Positioner le charactère sur la surface donnée
+        Args:
+            txt (str): le charactère ou texte en question
+            idx (str): id de la surface
+        Returns:
+            int: retourne l'id
+        """
         color = (255,255,255)
         ft = pygame.font.SysFont(self.general_font, game.char_size)
         txt_size = ft.size(txt)
@@ -97,6 +117,11 @@ class game():
         return str(game.id)
     
     def convert_text(self,txt, line=0):
+        """Affiche les texte des lignes précédentes
+        Args:
+            txt (str): texte
+            line (int, optional): ligne ou l'afficher. Defaults to 0.
+        """
         i=0
         for letter in txt:
             idx = f"{line} {i}"
@@ -132,6 +157,16 @@ class game():
                 self.full = True
         
     def draw_rect(self, id, pos, size, color=(50,50,50), keep_ratio = False):
+        """Dessiner la grille
+        Args:
+            id (str|int): id de la surface
+            pos (tuple->float): position en x et y en % flottant (0.0 -> 1.0)
+            size (tuple->int): Taille en % flottant
+            color (tuple, optional): couleur RGB. Defaults to (50,50,50).
+            keep_ratio (bool, optional): Garder le format carré avec le redimensionnement. Defaults to False.
+        Returns:
+            int: id de l(objet créé)
+        """
         self.rect[str(id)] = {'pos':pos, 'size':size, 'color':color, 'ratio':keep_ratio, 'state':None, 'state_done': False}
         return str(id)
 
@@ -162,7 +197,6 @@ class game():
                 i.kill()
             self.menu_btn()
 
-    
     def refresh(self): 
         for rect in game.rect:
             if game.rect[rect]['ratio']:

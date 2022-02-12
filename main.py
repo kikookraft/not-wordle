@@ -11,7 +11,7 @@
 
 import pygame #2.1.2
 import pygame_gui #0.6.4
-import game
+from game import game
 
 if __name__ == "__main__":
     G = game()
@@ -20,7 +20,6 @@ if __name__ == "__main__":
     G.button_words.disable()
     kik = G.text((0.01,0.95), "By kikookraft", 0, centered=False)
     title = G.text((0.5,0.1), "Definitely not Wordle", 1, size=50)
-
 
     while G.is_running:
         time_delta = G.clock.tick(G.FPS)/1000.0
