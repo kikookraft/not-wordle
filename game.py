@@ -9,6 +9,8 @@ class game():
         game.color_good = (70,170,50)
         game.color_almost = (220,180,40)
         game.color_bad = (60,30,30)
+        game.color_cursor = (100,100,100)
+        game.color_normal = (50,50,50)
         self.w = self.screen_size[0]
         self.h = self.screen_size[1]
         game.bg_color='#141414'
@@ -144,6 +146,7 @@ class game():
         #self.text((0.5, 0.1), self.word, 1, (0,200,0), 75)
         game.char_size_set=False
         self.game_ui()
+        self.cursor()
         self.started = True
 
     def game_loop(self):
@@ -167,7 +170,7 @@ class game():
         Returns:
             int: id de l(objet créé)
         """
-        self.rect[str(id)] = {'pos':pos, 'size':size, 'color':color, 'ratio':keep_ratio, 'state':None, 'state_done': False}
+        self.rect[str(id)] = {'pos':pos, 'size':size, 'color':color, 'ratio':keep_ratio, 'state':None, 'state_done': False, 'cursor':False, 'id':id}
         return str(id)
 
     def game_ui(self):
@@ -209,8 +212,12 @@ class game():
                 box = pygame.Rect(x, y, game.rect[rect]['size'][0]*self.w, game.rect[rect]['size'][1]*self.h)
             color = game.rect[rect]['color']
             if game.rect[rect]['state_done'] == False and game.rect[rect]['state'] != None:
+                color = game.rect[rect]['color']
                 if not 'state_end' in game.rect[rect].keys():
-                    game.rect[rect]['state_end'] = self.tick + game.FPS
+                    if game.rect[rect]['state'] == 4:
+                        game.rect[rect]['state_end'] = self.tick + game.FPS
+                    else:
+                        game.rect[rect]['state_end'] = self.tick + game.FPS
                 if game.rect[rect]['state'] == 1:
                     color1 = color[0] + ((game.color_good[0]-color[0]) * self.beizer(1-((game.rect[rect]['state_end']-self.tick)/game.FPS)))
                     color2 = color[1] + ((game.color_good[1]-color[1]) * self.beizer(1-((game.rect[rect]['state_end']-self.tick)/game.FPS)))
@@ -221,7 +228,7 @@ class game():
                     color2 = color[1] + ((game.color_almost[1]-color[1]) * self.beizer(1-((game.rect[rect]['state_end']-self.tick)/game.FPS)))
                     color3 = color[2] + ((game.color_almost[2]-color[2]) * self.beizer(1-((game.rect[rect]['state_end']-self.tick)/game.FPS)))
                     color = (color1, color2, color3)
-                else:
+                elif game.rect[rect]['state'] == 3:
                     color1 = color[0] + ((game.color_bad[0]-color[0]) * self.beizer(1-((game.rect[rect]['state_end']-self.tick)/game.FPS)))
                     color2 = color[1] + ((game.color_bad[1]-color[1]) * self.beizer(1-((game.rect[rect]['state_end']-self.tick)/game.FPS)))
                     color3 = color[2] + ((game.color_bad[2]-color[2]) * self.beizer(1-((game.rect[rect]['state_end']-self.tick)/game.FPS)))
@@ -229,6 +236,11 @@ class game():
                 if game.rect[rect]['state_end'] <= self.tick:
                     game.rect[rect]['color'] = color
                     game.rect[rect]['state_done'] = True
+            if int(game.rect[rect]['id'].split()[0]) == self.line:
+                if game.rect[rect]['cursor'] and not game.rect[rect]['color'] == game.color_cursor:
+                    color = self.color_cursor
+                elif not game.rect[rect]['cursor'] and not game.rect[rect]['color'] == game.color_normal:
+                    color = self.color_normal
             pygame.draw.rect(self.window_surface, color, box)
         for txt in game.texts:
             self.window_surface.blit(game.texts[txt][0], game.texts[txt][1])
@@ -286,6 +298,23 @@ class game():
         self.tick_tmp = 0
         self.win = False
         self.return_menu = False
+
+    def cursor(self):
+        id_x = len(self.input_text)
+        id_y = self.line
+        if id_x < len(self.word) and id_y < len(self.word)+1:
+            id = '{} {}'.format(id_y, id_x)
+            self.rect[id]['cursor'] = True
+        if id_x > 0 and id_y < len(self.word)+1:
+            id = '{} {}'.format(id_y, id_x-1)
+            self.rect[id]['cursor'] = False
+        if id_x < len(self.word)-1 and id_y < len(self.word)+1:
+            id = '{} {}'.format(id_y, id_x+1)
+            self.rect[id]['cursor'] = False
+
+
+
+
 
 if __name__ == "__main__":
     print("Wrong file!\nTo play the game, launch the main.py file with:\u001b[32m\u001b[40;1m python3 main.py\u001b[0m")

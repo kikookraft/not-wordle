@@ -2,7 +2,6 @@
 
 # --- BUGS ---
 # - Problèmes de redimensionement (linux, pygame 2.1.2 && python 3.8.10)
-# TODO Dessiner flèche pour indiquer la ligne éditable
 # TODO Empecher plusieures mêmes lettres d'avoir les couleurs
 # TODO Créer système pour ne pas avoir 2 fois le même mot
 #      (y faire avec un fichier texte)
@@ -40,6 +39,7 @@ if __name__ == "__main__":
                             G.letters.clear()
                             G.convert_text(G.input_text,G.line)
                             G.game_loop()
+                            G.cursor()
                     elif event.key == pygame.K_RETURN:
                         if len(G.input_text)==len(G.word) and not G.full:
                             G.check_word()
@@ -49,6 +49,7 @@ if __name__ == "__main__":
                             G.guess.append(G.input_text)
                             G.input_text=""
                             G.line+=1
+                            G.cursor()
                         else:
                             print("Texte trop court")
                         G.game_loop()
@@ -58,6 +59,7 @@ if __name__ == "__main__":
                         G.input_text += event.unicode
                         G.convert_text(G.input_text,G.line)
                         G.game_loop()
+                        G.cursor()
                 if G.line >= len(G.word)+1:
                     G.full = True
                     
