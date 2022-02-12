@@ -6,7 +6,9 @@ Pour vous aider il y a plusieurs indicateurs:
 - Cases rouges: elles vous indiquent que la lettre n'est pas dans le mot
 - Cases jaunes: la lettre est dans le mot mais pas au bon endroit
 - Cases vertes: La lettre est bien placée
-  
+ 
+<img src="res/img.jpg" alt="drawing" width="40%"/>  
+
 Ce jeu utilise un fichier de plus de 15 000 mots ['français'](#Problèmes)
 
 ---
