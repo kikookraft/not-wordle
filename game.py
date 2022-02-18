@@ -49,6 +49,9 @@ class game():
         game.tick_tmp = 0
         game.win = False
         game.return_menu = False
+        game.resized = False
+        game.frame_resized = False
+        game.frame_size = None
     
     def beizer(self, x):
         return x**2*(3-2*x)
@@ -204,6 +207,21 @@ class game():
             for i in self.btn:
                 i.kill()
             self.menu_btn()
+    
+    def resize(self):
+        self.screen_size = self.frame_size
+        surface = pygame.display.set_mode(self.frame_size, pygame.RESIZABLE)
+        self.w = self.window_surface.get_width()
+        self.h = self.window_surface.get_height()
+        self.letters.clear()
+        self.refresh()
+        self.update()
+        self.button_words.disable()
+        self.rect.clear()
+        if self.started:
+            self.game_ui()
+            self.convert_text(self.input_text,self.line)
+            self.game_loop()
 
     def refresh(self): 
         for rect in game.rect:

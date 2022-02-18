@@ -20,6 +20,7 @@ if __name__ == "__main__":
     title = G.text((0.5,0.1), "Definitely not Wordle", 1, size=50)
 
     while G.is_running:
+        G.frame_resized = False
         time_delta = G.clock.tick(G.FPS)/1000.0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -72,21 +73,12 @@ if __name__ == "__main__":
                     quit()
 
             if event.type == pygame.VIDEORESIZE:
-                surface = pygame.display.set_mode((event.w, event.h))#,pygame.RESIZABLE
-                G.screen_size = (event.w, event.h)
-                G.w = event.w
-                G.h = event.h
-                G.letters.clear()
-                G.refresh()
-                G.update()
-                G.button_words.disable()
-                G.rect.clear()
-                if G.started:
-                    G.game_ui()
-                    G.convert_text(G.input_text,G.line)
-                    G.game_loop()
-                try:del G.texts[kik]
-                except:pass
+                #bug https://github.com/pygame/pygame/pull/1705
+                #    https://github.com/McSinyx/brutalmaze/issues/11
+                #    https://github.com/pygame/pygame/issues/1624
+                G.frame_resized = True
+                G.resized = True
+                G.frame_size = (event.w,event.h)
             G.manager.process_events(event)
         if G.return_menu:
             G.reset()
@@ -94,10 +86,16 @@ if __name__ == "__main__":
             G.button_words.disable()
             kik = G.text((0.01,0.95), "By kikookraft", 0, centered=False)
             title = G.text((0.5,0.1), "Definitely not Wordle", 1, size=50)
-        G.manager.update(time_delta)
-        G.window_surface.blit(G.background, (0, 0))
-        G.manager.draw_ui(G.window_surface)
-        G.refresh()
-        G.display_fps()
-        pygame.display.update()
-        G.tick += 1
+        if G.resized and not G.frame_resized:
+            G.resize()
+            G.resized = False
+            G.frame_size = None
+        if not G.resized:
+            G.manager.update(time_delta)
+            G.window_surface.blit(G.background, (0, 0))
+            G.manager.draw_ui(G.window_surface)
+            G.refresh()
+            G.display_fps()
+            pygame.display.update()
+            pygame.display.flip()
+            G.tick += 1
