@@ -22,7 +22,7 @@ class game():
         pygame.mixer.music.set_volume(0.2)
         pygame.mixer.music.play(-1)
         game.FPS = 60
-        self.window_surface = pygame.display.set_mode(self.screen_size) #, pygame.RESIZABLE
+        self.window_surface = pygame.display.set_mode(self.screen_size, pygame.RESIZABLE) #, pygame.RESIZABLE
         game.background = pygame.Surface(self.screen_size)
         game.background.fill(pygame.Color(self.bg_color))
         game.is_running = True
