@@ -2,6 +2,7 @@ import pygame #2.1.2
 import pygame_gui #0.6.4
 import random
 from datetime import datetime
+import asyncio
 
 class game():
     """Classe principale du jeu
@@ -52,6 +53,12 @@ class game():
         game.resized = False
         game.frame_resized = False
         game.frame_size = None
+
+    def pygame_event_loop(loop, event_queue):
+        while True:
+            event = pygame.event.wait()
+            asyncio.run_coroutine_threadsafe(event_queue.put(event), loop=loop)
+
     
     def beizer(self, x):
         return x**2*(3-2*x)
@@ -223,7 +230,7 @@ class game():
             self.convert_text(self.input_text,self.line)
             self.game_loop()
 
-    def refresh(self): 
+    async def refresh(self): 
         for rect in game.rect:
             if game.rect[rect]['ratio']:
                 x= game.rect[rect]['pos'][0]*self.w - game.rect[rect]['size'][1]*self.h/2 ## centrer en x
